@@ -1,0 +1,47 @@
+{
+  "name": "Inspogen LFP",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "description": "An extension that help inspires you while you write.",
+  "homepage_url": "https://www.google.com/",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "background": {
+    "service_worker": "src/bg/service_worker.js"
+  },
+  "oauth2": {
+    "client_id": "472792657842-9qdstnp74jub64q71jiu2p02nq89bsef.apps.googleusercontent.com",
+    "scopes":["https://www.googleapis.com/auth/documents"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://docs.google.com/*"
+      ],
+      "js": [
+        "src/modules/stripe/stripe.js",
+        "src/modules/chart/Chart.js",
+        "src/modules/analytics/analytics.min.js",
+        "src/modules/analytics/870.bundle.323974846b6d45afb45e.js",
+        "src/modules/analytics/ajs-destination.bundle.35a8f6f19959bf2f455f.js",
+        "src/modules/analytics/schemaFilter.bundle.debb169c1abb431faaa6.js",
+        "src/inject/ui_overlay.js"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; connect-src https://hospitable-decisive-leo.glitch.me https://localhost:5000 http://localhost:5000 https://docs.googleapis.com https://api.openai.com https://identitytoolkit.googleapis.com https://firestore.googleapis.com https://securetoken.googleapis.com https://js.stripe.com https://penspyre.herokuapp.com;"
+  },
+  "permissions": [
+    "identity",
+    "storage"
+  ],
+  "host_permissions": ["https://api.com/*","https://localhost:5000/*", "http://localhost:5000/*", "https://hospitable-decisive-leo.glitch.me/*"],
+  "optional_host_permissions": [
+    "*://*/*"
+  ]
+}
