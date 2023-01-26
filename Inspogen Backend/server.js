@@ -30,6 +30,11 @@ app.post('/getImages2',(req,res) =>{
     })
 })
 
+app.get('/testPlagarismChecker',(req,res) =>{
+    checkPlagarism('When he was nearly thirteen, my brother Jem got his arm badly broken at the elbow. When it healed, and Jem’s fears of never being able to play football were assuaged, he was seldom self-conscious about his injury.').then((result)=>{
+        res.status(200).json(result)
+    })
+})
 
 async function getOpenAIResponseSingle(prompt, user){
     return new Promise(function (resolve, reject) {
@@ -186,6 +191,25 @@ async function getImages(prompt,user){
     });
 }
 
-
+async function checkPlagarism(prompt){
+    return new Promise(function (resolve, reject) {
+        fetch("https://www.check-plagiarism.com/apis/checkPlag", {
+        body: "key=38fbadfbd004cf7826f3a8eb11ce2268&data=" + prompt,
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        method: "POST"
+        }).then((initialResponse) => {
+            if(initialResponse.status >= 400){
+                resolve([{checkFailed : true}])
+            }else{
+                initialResponse.json().then((plagarismCheck) => {
+                    console.log(plagarismCheck)
+                    resolve([{checkFailed : false}])
+                })
+            }
+        })
+    });
+}
 
 app.listen(5000)
