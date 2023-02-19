@@ -36,6 +36,265 @@ app.get('/testPlagarismChecker',(req,res) =>{
     })
 })
 
+// *** New stuff for text generation *** //
+
+app.post('/continuePrompt',(req,res) =>{
+    console.log("in continuePrompt")
+    // Parameters `req.body` are: `prompt`, `continueFocus`, `continueTone`
+    getOpenAIResponseContinue(req.body.prompt,req.body.continueFocus,req.body.continueTone,"testAutocompleteClient").then((generatedText) => {
+        res.status(200).json({text: generatedText})
+    }).catch((e) => {
+        res.status(500)
+    })
+})
+
+async function getOpenAIResponseContinue(prompt, continueFocus, continueTone, user) {
+    return new Promise(function (resolve, reject) {
+        let fetch_url = `https://api.openai.com/v1/completions`;
+        prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        const promptWithCommand = `"""${prompt}""" Continue the story as a ${continueFocus} with ${continueTone} undertone.`;
+
+        var data = `{
+        "model": "davinci-003",
+        "prompt": "${promptWithCommand}",
+        "user": "${user}",
+        "temperature": 0.9,
+        "max_tokens": 150,
+        "top_p": 1,
+        "frequency_penalty": 0.2,
+        "presence_penalty": 0.2
+        }`;
+
+        let fetch_options = {
+        method: "POST",
+        headers: {
+            Authorization: "Bearer " + process.env.OPEN_AI_KEY,
+            "Content-Type": "application/json",
+        },
+        body: data,
+        };
+
+        fetch(fetch_url, fetch_options).then((initialResponse) => {
+            if (initialResponse.status >= 400) {
+                resolve([{ text: "...Failed to generate, please try again later." }]);
+            } else {
+                initialResponse.json().then((openAIResponse) => {
+                isResultNotAllowed(openAIResponse.choices[0].text).then(
+                    (isUnsafeText) => {
+                    if (isUnsafeText) {
+                        resolve(
+                        "... generated a sensitive prompt regarding OpenAI content policy (i.e violence/self-harm)."
+                        );
+                    } else if (openAIResponse.choices[0].text.length < 2) {
+                        resolve(
+                        "... AI believes this is the end of an idea/plot."
+                        );
+                    } else {
+                        resolve(openAIResponse.choices[0].text);
+                    }
+                    }
+                );
+                });
+            }
+        })
+    });
+}
+
+
+
+// LINK TEXT
+
+app.post('/linkPrompt',(req,res) =>{
+    console.log("in linkPrompt")
+    // Parameters `req.body` are: `prompt`, `linkText`
+    getOpenAIResponseLink(req.body.prompt,req.body.linkText,"testAutocompleteClient").then((generatedText) => {
+        res.status(200).json({text: generatedText})
+    }).catch((e) => {
+        res.status(500)
+    })
+})
+
+async function getOpenAIResponseLink(prompt, linkText, user) {
+    return new Promise(function (resolve, reject) {
+        let fetch_url = `https://api.openai.com/v1/completions`;
+        prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        const promptWithCommand = `"""${prompt}""" Continue the story to connect with """${linkText}""".`;
+
+        var data = `{
+        "model": "davinci-003",
+        "prompt": "${promptWithCommand}",
+        "user": "${user}",
+        "temperature": 0.9,
+        "max_tokens": 150,
+        "top_p": 1,
+        "frequency_penalty": 0.2,
+        "presence_penalty": 0.2
+        }`;
+
+        let fetch_options = {
+        method: "POST",
+        headers: {
+            Authorization: "Bearer " + process.env.OPEN_AI_KEY,
+            "Content-Type": "application/json",
+        },
+        body: data,
+        };
+
+        fetch(fetch_url, fetch_options).then((initialResponse) => {
+            if (initialResponse.status >= 400) {
+                resolve([{ text: "...Failed to generate, please try again later." }]);
+            } else {
+                initialResponse.json().then((openAIResponse) => {
+                isResultNotAllowed(openAIResponse.choices[0].text).then(
+                    (isUnsafeText) => {
+                    if (isUnsafeText) {
+                        resolve(
+                        "... generated a sensitive prompt regarding OpenAI content policy (i.e violence/self-harm)."
+                        );
+                    } else if (openAIResponse.choices[0].text.length < 2) {
+                        resolve(
+                        "... AI believes this is the end of an idea/plot."
+                        );
+                    } else {
+                        resolve(openAIResponse.choices[0].text);
+                    }
+                    }
+                );
+                });
+            }
+        })
+    });
+}
+
+// DESCRIBE ELEMENT
+
+app.post('/describePrompt',(req,res) =>{
+    console.log("in describePrompt")
+    // Parameters `req.body` are: `prompt`, `describeTopic`, `describeStyle`
+    getOpenAIResponseDescribe(req.body.prompt,req.body.describeTopic,req.body.describeStyle,"testAutocompleteClient").then((generatedText) => {
+        res.status(200).json({text: generatedText})
+    }).catch((e) => {
+        res.status(500)
+    })
+})
+
+async function getOpenAIResponseDescribe(prompt, describeTopic, describeStyle, user) {
+    return new Promise(function (resolve, reject) {
+        let fetch_url = `https://api.openai.com/v1/completions`;
+        prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        const promptWithCommand = `"""${prompt}""" Describe """${describeTopic}""" in terms of ${describeStyle}`;
+
+        var data = `{
+        "model": "davinci-003",
+        "prompt": "${promptWithCommand}",
+        "user": "${user}",
+        "temperature": 0.9,
+        "max_tokens": 150,
+        "top_p": 1,
+        "frequency_penalty": 0.2,
+        "presence_penalty": 0.2
+        }`;
+
+        let fetch_options = {
+        method: "POST",
+        headers: {
+            Authorization: "Bearer " + process.env.OPEN_AI_KEY,
+            "Content-Type": "application/json",
+        },
+        body: data,
+        };
+
+        fetch(fetch_url, fetch_options).then((initialResponse) => {
+            if (initialResponse.status >= 400) {
+                resolve([{ text: "...Failed to generate, please try again later." }]);
+            } else {
+                initialResponse.json().then((openAIResponse) => {
+                isResultNotAllowed(openAIResponse.choices[0].text).then(
+                    (isUnsafeText) => {
+                    if (isUnsafeText) {
+                        resolve(
+                        "... generated a sensitive prompt regarding OpenAI content policy (i.e violence/self-harm)."
+                        );
+                    } else if (openAIResponse.choices[0].text.length < 2) {
+                        resolve(
+                        "... AI believes this is the end of an idea/plot."
+                        );
+                    } else {
+                        resolve(openAIResponse.choices[0].text);
+                    }
+                    }
+                );
+                });
+            }
+        })
+    });
+}
+
+//List prompt
+app.post('/listPrompt',(req,res) =>{
+    console.log("in listPrompt")
+    // Parameters `req.body` are: `prompt`, `listTopic`, `listContext`
+    getOpenAIResponseList(req.body.prompt,req.body.listTopic,req.body.listContext,"testAutocompleteClient").then((generatedText) => {
+        res.status(200).json({text: generatedText})
+    }).catch((e) => {
+        res.status(500)
+    })
+})
+
+async function getOpenAIResponseList(prompt, listTopic, listContext, user) {
+    return new Promise(function (resolve, reject) {
+        let fetch_url = `https://api.openai.com/v1/completions`;
+        prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        const promptWithCommand = `"""${prompt}""" Generate a list of """${listTopic}""" one might find in """${listContext}"""`;
+
+        var data = `{
+        "model": "davinci-003",
+        "prompt": "${promptWithCommand}",
+        "user": "${user}",
+        "temperature": 0.9,
+        "max_tokens": 150,
+        "top_p": 1,
+        "frequency_penalty": 0.2,
+        "presence_penalty": 0.2
+        }`;
+
+        let fetch_options = {
+        method: "POST",
+        headers: {
+            Authorization: "Bearer " + process.env.OPEN_AI_KEY,
+            "Content-Type": "application/json",
+        },
+        body: data,
+        };
+
+        fetch(fetch_url, fetch_options).then((initialResponse) => {
+            if (initialResponse.status >= 400) {
+                resolve([{ text: "...Failed to generate, please try again later." }]);
+            } else {
+                initialResponse.json().then((openAIResponse) => {
+                isResultNotAllowed(openAIResponse.choices[0].text).then(
+                    (isUnsafeText) => {
+                    if (isUnsafeText) {
+                        resolve(
+                        "... generated a sensitive prompt regarding OpenAI content policy (i.e violence/self-harm)."
+                        );
+                    } else if (openAIResponse.choices[0].text.length < 2) {
+                        resolve(
+                        "... AI believes this is the end of an idea/plot."
+                        );
+                    } else {
+                        resolve(openAIResponse.choices[0].text);
+                    }
+                    }
+                );
+                });
+            }
+        })
+    });
+}
+
+////////////////////////////////////////////
+
 async function getOpenAIResponseSingle(prompt, user){
     return new Promise(function (resolve, reject) {
         let fetch_url = `https://api.openai.com/v1/completions`;
