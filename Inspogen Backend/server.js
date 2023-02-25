@@ -3,31 +3,113 @@ const helmet = require("helmet");
 const express = require('express');
 const bodyParser = require("body-parser");
 const cors = require('cors')
+const NodeCache = require("node-cache")
 const fetch = (...args) =>
 	import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 var app = express();
 
+const cache = new NodeCache({stdTTL: 120, checkperiod: 300, maxKeys: 3});
+
 app.use(bodyParser.json());
 
 app.post('/getImages',(req,res) =>{
-    getOpenAIResponseSingle(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
-        getImages(generatedText,"testAutocompleteClient").then((results) =>{
-            res.status(200).json(results)
+    if(cache.has("image1")){
+
+        if(cache.get("image1").length > 1){
+            let temp = cache.get("image1"); // store as separate to not mutate original cache for now
+            first_element_of_cache = temp.shift(1); // temp now becomes the rest of the cache with the first element removed
+
+            // overwrite cached value with new subcached element
+            cache.set("image1", temp);
+
+            res.status(200).json(first_element_of_cache);
+            
+        }
+        else if (cache.get("image1").length == 1){
+            res.status(200).json(cache.take("image1")); // take gets the cache and then deletes it
+        }
+        else{
+            res.status(500); // something is wrong with the cache
+        }
+        
+    }
+    else{
+        getOpenAIResponseSingle(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
+            getImages(generatedText,"testAutocompleteClient").then((results) =>{
+                // construct original response object
+                let first_result_object = {
+                    "text": results[0].text,
+                    "img": results[0].img[0].url
+                };
+
+                // create datapoint for cache
+                temp_list = [];
+                for(i = 1; i < results[0].img.length; i++){
+                    // i = 1 ignore the first one
+                    let temp_cache_object = {
+                        "text": results[0].text,
+                        "img": results[0].img[i].url
+                    };
+                    temp_list.push(temp_cache_object);
+                }
+
+                cache.set("image1", temp_list); // TODO: Test to see if type works
+                res.status(200).json(first_result_object);
+            })
+        }).catch((e) => {
+            res.status(500)
         })
-    }).catch((e) => {
-        res.status(500)
-    })
+    }
+    
 })
 
 app.post('/getImages2',(req,res) =>{
-    getOpenAIResponseSingle2(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
-        getImages(generatedText,"testAutocompleteClient").then((results) =>{
-            res.status(200).json(results)
+    if(cache.has("image2")){
+        if(cache.get("image2").length > 1){
+            let temp = cache.get("image2"); // store as separate to not mutate original cache for now
+            first_element_of_cache = temp.shift(1); // temp now becomes the rest of the cache with the first element removed
+
+            // overwrite cached value with new subcached element
+            cache.set("image2", temp);
+
+            res.status(200).json(first_element_of_cache);
+        }
+        else if (cache.get("image2").length == 1){
+            res.status(200).json(cache.take("image2")); // take gets the cache and then deletes it
+        }
+        else{
+            res.status(500); // something is wrong with the cache
+        }
+    }
+    else{
+        getOpenAIResponseSingle(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
+            getImages(generatedText,"testAutocompleteClient").then((results) =>{
+                // construct original response object
+                let first_result_object = {
+                    "text": results[0].text,
+                    "img": results[0].img[0].url
+                };
+
+                // create datapoint for cache
+                temp_list = [];
+                for(i = 1; i < results[0].img.length; i++){
+                    // i = 1 ignore the first one
+                    let temp_cache_object = {
+                        "text": results[0].text,
+                        "img": results[0].img[i].url
+                    };
+                    temp_list.push(temp_cache_object);
+                }
+
+                cache.set("image2", temp_list); // TODO: Test to see if type works
+                res.status(200).json(first_result_object);
+            })
+        }).catch((e) => {
+            res.status(500)
         })
-    }).catch((e) => {
-        res.status(500)
-    })
+    }
+    
 })
 
 app.get('/testPlagarismChecker',(req,res) =>{
@@ -426,7 +508,7 @@ async function getImages(prompt,user){
         "size": "256x256",
         "prompt": "${"Digital art of " + prompt}",
         "user": "${user}",
-        "n": 1
+        "n": 4 
         }`
 
         let fetch_options = {
@@ -443,7 +525,8 @@ async function getImages(prompt,user){
                 resolve([{text: "...Failed to generate, please try again later.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"}])
             }else{
                 initialResponse.json().then((openAIResponse) => {
-                    resolve([{text: prompt, img: openAIResponse.data[0].url}])
+                    // resolve([{text: prompt, img: openAIResponse.data[0].url}])
+                    resolve([{text: prompt, img: openAIResponse.data}]) // not zero to return all responses, must account for this in getImages()
                 })
             }
         })
