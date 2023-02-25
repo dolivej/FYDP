@@ -2,7 +2,7 @@ require('dotenv').config()
 const helmet = require("helmet");
 const express = require('express');
 const bodyParser = require("body-parser");
-const cors = require('cors')
+const cors = require('cors');
 const fetch = (...args) =>
 	import('node-fetch').then(({default: fetch}) => fetch(...args));
 
@@ -11,27 +11,16 @@ var app = express();
 app.use(bodyParser.json());
 
 app.post('/getImages',(req,res) =>{
-    getOpenAIResponseSingle(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
-        getImages(generatedText,"testAutocompleteClient").then((results) =>{
+    console.log("in getImages")
+    getImages(req.body.prompt,"testAutocompleteClient").then((results) =>{
             res.status(200).json(results)
-        })
     }).catch((e) => {
         res.status(500)
     })
 })
 
-app.post('/getImages2',(req,res) =>{
-    getOpenAIResponseSingle2(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
-        getImages(generatedText,"testAutocompleteClient").then((results) =>{
-            res.status(200).json(results)
-        })
-    }).catch((e) => {
-        res.status(500)
-    })
-})
-
-app.get('/testPlagarismChecker',(req,res) =>{
-    checkPlagarism('When he was nearly thirteen, my brother Jem got his arm badly broken at the elbow. When it healed, and Jem’s fears of never being able to play football were assuaged, he was seldom self-conscious about his injury.').then((result)=>{
+app.post('/checkPlagarism',(req,res) =>{
+    checkPlagarism(req.body.text).then((result)=>{
         res.status(200).json(result)
     })
 })
@@ -48,14 +37,27 @@ app.post('/continuePrompt',(req,res) =>{
     })
 })
 
-async function getOpenAIResponseContinue(prompt, continueFocus, continueTone, user) {
+async function getOpenAIResponseContinue(prompt, continueFocus, continueTone, user) {  
     return new Promise(function (resolve, reject) {
         let fetch_url = `https://api.openai.com/v1/completions`;
         prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
-        const promptWithCommand = `"""${prompt}""" Continue the story as a ${continueFocus} with ${continueTone} undertone.`;
+        continueFocus = continueFocus.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        continueTone = continueTone.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        
+        let promptWithCommand;
+      
+        if(continueFocus == "any" && continueTone == "any"){
+          promptWithCommand = `'${prompt}' Based on the quoted text continue the text.`;
+        }else if(continueFocus == "any"){
+          promptWithCommand = `'${prompt}' Based on the quoted text continue the text with a ${continueTone} undertone.`;
+        }else if (continueTone == "any"){
+          promptWithCommand = `'${prompt}' Based on the quoted text continue the text with lots of ${continueFocus}.`;
+        }else{
+          promptWithCommand = `'${prompt}' Based on the quoted text continue the text with lots of ${continueFocus} and with a ${continueTone} undertone.`;        
+        }
 
         var data = `{
-        "model": "davinci-003",
+        "model": "text-davinci-003",
         "prompt": "${promptWithCommand}",
         "user": "${user}",
         "temperature": 0.9,
@@ -76,7 +78,10 @@ async function getOpenAIResponseContinue(prompt, continueFocus, continueTone, us
 
         fetch(fetch_url, fetch_options).then((initialResponse) => {
             if (initialResponse.status >= 400) {
-                resolve([{ text: "...Failed to generate, please try again later." }]);
+                initialResponse.json().then((openAIResponse) => {
+                  console.log(openAIResponse)
+                  resolve("...Failed to generate, please try again later.");
+                });
             } else {
                 initialResponse.json().then((openAIResponse) => {
                 isResultNotAllowed(openAIResponse.choices[0].text).then(
@@ -87,10 +92,10 @@ async function getOpenAIResponseContinue(prompt, continueFocus, continueTone, us
                         );
                     } else if (openAIResponse.choices[0].text.length < 2) {
                         resolve(
-                        "... AI believes this is the end of an idea/plot."
+                        "... InspoGen believes this is the end of an idea/plot."
                         );
                     } else {
-                        resolve(openAIResponse.choices[0].text);
+                        resolve("..." + openAIResponse.choices[0].text.trim() + "...");
                     }
                     }
                 );
@@ -99,7 +104,6 @@ async function getOpenAIResponseContinue(prompt, continueFocus, continueTone, us
         })
     });
 }
-
 
 
 // LINK TEXT
@@ -118,10 +122,11 @@ async function getOpenAIResponseLink(prompt, linkText, user) {
     return new Promise(function (resolve, reject) {
         let fetch_url = `https://api.openai.com/v1/completions`;
         prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
-        const promptWithCommand = `"""${prompt}""" Continue the story to connect with """${linkText}""".`;
+        linkText = linkText.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        const promptWithCommand = `'${prompt}' Based on the quoted text continue the text to connect with '${linkText}'.`;  
 
         var data = `{
-        "model": "davinci-003",
+        "model": "text-davinci-003",
         "prompt": "${promptWithCommand}",
         "user": "${user}",
         "temperature": 0.9,
@@ -142,7 +147,7 @@ async function getOpenAIResponseLink(prompt, linkText, user) {
 
         fetch(fetch_url, fetch_options).then((initialResponse) => {
             if (initialResponse.status >= 400) {
-                resolve([{ text: "...Failed to generate, please try again later." }]);
+                resolve("...Failed to generate, please try again later.");
             } else {
                 initialResponse.json().then((openAIResponse) => {
                 isResultNotAllowed(openAIResponse.choices[0].text).then(
@@ -156,7 +161,7 @@ async function getOpenAIResponseLink(prompt, linkText, user) {
                         "... AI believes this is the end of an idea/plot."
                         );
                     } else {
-                        resolve(openAIResponse.choices[0].text);
+                        resolve("..." + openAIResponse.choices[0].text.trim() + "...");
                     }
                     }
                 );
@@ -182,10 +187,22 @@ async function getOpenAIResponseDescribe(prompt, describeTopic, describeStyle, u
     return new Promise(function (resolve, reject) {
         let fetch_url = `https://api.openai.com/v1/completions`;
         prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
-        const promptWithCommand = `"""${prompt}""" Describe """${describeTopic}""" in terms of ${describeStyle}`;
+        describeTopic = describeTopic.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        describeStyle = describeStyle.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        
+        console.log(describeStyle)
+      
+        var promptWithCommand
+        
+        if(describeStyle == "any"){
+          promptWithCommand = `'${prompt}' With the previous quoted text for context, describe '${describeTopic}'.`;
+        }else{
+          promptWithCommand = `'${prompt}' With the previous quoted text for context, describe '${describeTopic}' in terms of only ${describeStyle}.`;
+        }
+        
 
         var data = `{
-        "model": "davinci-003",
+        "model": "text-davinci-003",
         "prompt": "${promptWithCommand}",
         "user": "${user}",
         "temperature": 0.9,
@@ -206,7 +223,7 @@ async function getOpenAIResponseDescribe(prompt, describeTopic, describeStyle, u
 
         fetch(fetch_url, fetch_options).then((initialResponse) => {
             if (initialResponse.status >= 400) {
-                resolve([{ text: "...Failed to generate, please try again later." }]);
+                resolve("...Failed to generate, please try again later.");
             } else {
                 initialResponse.json().then((openAIResponse) => {
                 isResultNotAllowed(openAIResponse.choices[0].text).then(
@@ -220,7 +237,7 @@ async function getOpenAIResponseDescribe(prompt, describeTopic, describeStyle, u
                         "... AI believes this is the end of an idea/plot."
                         );
                     } else {
-                        resolve(openAIResponse.choices[0].text);
+                        resolve(openAIResponse.choices[0].text.trim());
                     }
                     }
                 );
@@ -245,10 +262,13 @@ async function getOpenAIResponseList(prompt, listTopic, listContext, user) {
     return new Promise(function (resolve, reject) {
         let fetch_url = `https://api.openai.com/v1/completions`;
         prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
-        const promptWithCommand = `"""${prompt}""" Generate a list of """${listTopic}""" one might find in """${listContext}"""`;
+        listTopic = listTopic.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        listContext = listContext.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+      
+        const promptWithCommand = `'${prompt}' With the previous quoted text for context, give me a list of three '${listTopic}' one might find in '${listContext}', and give a brief description of each.`;
 
         var data = `{
-        "model": "davinci-003",
+        "model": "text-davinci-003",
         "prompt": "${promptWithCommand}",
         "user": "${user}",
         "temperature": 0.9,
@@ -269,7 +289,7 @@ async function getOpenAIResponseList(prompt, listTopic, listContext, user) {
 
         fetch(fetch_url, fetch_options).then((initialResponse) => {
             if (initialResponse.status >= 400) {
-                resolve([{ text: "...Failed to generate, please try again later." }]);
+                resolve("...Failed to generate, please try again later.");
             } else {
                 initialResponse.json().then((openAIResponse) => {
                 isResultNotAllowed(openAIResponse.choices[0].text).then(
@@ -283,7 +303,7 @@ async function getOpenAIResponseList(prompt, listTopic, listContext, user) {
                         "... AI believes this is the end of an idea/plot."
                         );
                     } else {
-                        resolve(openAIResponse.choices[0].text);
+                        resolve(openAIResponse.choices[0].text.trim());
                     }
                     }
                 );
@@ -292,6 +312,91 @@ async function getOpenAIResponseList(prompt, listTopic, listContext, user) {
         })
     });
 }
+
+
+///////////////////GET IMAGE/////////////////////////
+
+async function getImages(prompt,user){
+    return new Promise(function (resolve, reject) {
+        prompt = prompt.replace(/[\r\n]/gm, '')
+      
+        let fetch_url = `https://api.openai.com/v1/completions`;
+        prompt = prompt.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+
+        const promptWithCommand = `'${prompt}' Convert the quoted text into a prompt for an artist to draw. Keep focus on any characters mentioned!`;
+
+        var data = `{
+        "model": "text-davinci-003",
+        "prompt": "${promptWithCommand}",
+        "user": "${user}",
+        "temperature": 0.9,
+        "max_tokens": 150,
+        "top_p": 1,
+        "frequency_penalty": 0.2,
+        "presence_penalty": 0.2
+        }`;
+
+        let fetch_options = {
+        method: "POST",
+        headers: {
+            Authorization: "Bearer " + process.env.OPEN_AI_KEY,
+            "Content-Type": "application/json",
+        },
+        body: data,
+        };
+
+        fetch(fetch_url, fetch_options).then((initialResponse) => {
+            if (initialResponse.status >= 400) {
+                resolve({text: "...Failed to generate, please try again later.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"});
+            } else {
+                initialResponse.json().then((openAIResponse) => {
+                isResultNotAllowed(openAIResponse.choices[0].text).then(
+                    (isUnsafeText) => {
+                    if (isUnsafeText) {
+                        resolve(
+                          {text: "... generated a sensitive prompt regarding OpenAI content policy (i.e violence/self-harm).", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"}
+                        );
+                    } else if (openAIResponse.choices[0].text.length < 2) {
+                        resolve(
+                          {text: "...InspoGen believes this is the end of a plot/idea.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"}
+                        );
+                    } else {
+                        
+                        let fetch_url2 = `https://api.openai.com/v1/images/generations`;
+                        var data2 = `{
+                        "size": "256x256",
+                        "prompt": "${prompt}",
+                        "user": "${user}",
+                        "n": 1
+                        }`
+
+                        let fetch_options2 = {
+                        method: "POST",
+                        headers: {
+                            Authorization: "Bearer " + process.env.OPEN_AI_KEY,
+                            "Content-Type": "application/json",
+                        },
+                        body: data2
+                        };
+
+                        fetch(fetch_url2, fetch_options2).then((initialResponse2) => {
+                            if(initialResponse2.status >= 400){
+                                resolve([{text: "...Failed to generate, please try again later.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"}])
+                            }else{
+                                initialResponse2.json().then((openAIResponse2) => {
+                                  resolve({text: openAIResponse.choices[0].text.trim(), img: openAIResponse2.data[0].url});
+                                })
+                            }
+                        })
+                    }
+                    }
+                );
+                });
+            }
+        })
+    });
+}
+
 
 ////////////////////////////////////////////
 
@@ -417,39 +522,6 @@ async function isResultNotAllowed(text){
     });
 }
 
-async function getImages(prompt,user){
-    return new Promise(function (resolve, reject) {
-        prompt = prompt.replace(/[\r\n]/gm, '')
-        let fetch_url = `https://api.openai.com/v1/images/generations`;
-
-        var data = `{
-        "size": "256x256",
-        "prompt": "${"Digital art of " + prompt}",
-        "user": "${user}",
-        "n": 1
-        }`
-
-        let fetch_options = {
-        method: "POST",
-        headers: {
-            Authorization: "Bearer " + process.env.OPEN_AI_KEY,
-            "Content-Type": "application/json",
-        },
-        body: data
-        };
-    
-        fetch(fetch_url, fetch_options).then((initialResponse) => {
-            if(initialResponse.status >= 400){
-                resolve([{text: "...Failed to generate, please try again later.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"}])
-            }else{
-                initialResponse.json().then((openAIResponse) => {
-                    resolve([{text: prompt, img: openAIResponse.data[0].url}])
-                })
-            }
-        })
-    });
-}
-
 async function checkPlagarism(prompt){
     return new Promise(function (resolve, reject) {
         fetch("https://www.check-plagiarism.com/apis/checkPlag", {
@@ -460,15 +532,15 @@ async function checkPlagarism(prompt){
         method: "POST"
         }).then((initialResponse) => {
             if(initialResponse.status >= 400){
-                resolve([{checkFailed : true}])
+                resolve({plagarismScore : 0, paraphrasingScore : 0})
             }else{
                 initialResponse.json().then((plagarismCheck) => {
-                    console.log(plagarismCheck)
-                    resolve([{checkFailed : false}])
+                    // console.log(plagarismCheck)
+                    resolve({plagarismScore : plagarismCheck.plagPercent, paraphrasingScore : plagarismCheck.paraphrasePercent})
                 })
             }
         })
     });
 }
 
-app.listen(5000)
+app.listen(process.env.PORT)
