@@ -14,6 +14,7 @@ const cache = new NodeCache({stdTTL: 120, checkperiod: 300, maxKeys: 3});
 app.use(bodyParser.json());
 
 app.post('/getImages',(req,res) =>{
+    temporary_array_to_match_old_endpoint = [];
     if(cache.has("image1")){
 
         if(cache.get("image1").length > 1){
@@ -22,12 +23,14 @@ app.post('/getImages',(req,res) =>{
 
             // overwrite cached value with new subcached element
             cache.set("image1", temp);
-
-            res.status(200).json(first_element_of_cache);
+            temporary_array_to_match_old_endpoint.push(first_element_of_cache)
+            // res.status(200).json(first_element_of_cache);
+            res.status(200).json(temporary_array_to_match_old_endpoint);
             
         }
         else if (cache.get("image1").length == 1){
-            res.status(200).json(cache.take("image1")); // take gets the cache and then deletes it
+            // res.status(200).json(cache.take("image1")[0]); // take gets the cache and then deletes it. this one returns it in an array so need to grab first element 
+            res.status(200).json(cache.take("image1"));
         }
         else{
             res.status(500); // something is wrong with the cache
@@ -55,7 +58,9 @@ app.post('/getImages',(req,res) =>{
                 }
 
                 cache.set("image1", temp_list); // TODO: Test to see if type works
-                res.status(200).json(first_result_object);
+                // res.status(200).json(first_result_object);
+                temporary_array_to_match_old_endpoint.push(first_result_object)
+                res.status(200).json(temporary_array_to_match_old_endpoint);
             })
         }).catch((e) => {
             res.status(500)
@@ -65,6 +70,7 @@ app.post('/getImages',(req,res) =>{
 })
 
 app.post('/getImages2',(req,res) =>{
+    temporary_array_to_match_old_endpoint = [];
     if(cache.has("image2")){
         if(cache.get("image2").length > 1){
             let temp = cache.get("image2"); // store as separate to not mutate original cache for now
@@ -72,11 +78,13 @@ app.post('/getImages2',(req,res) =>{
 
             // overwrite cached value with new subcached element
             cache.set("image2", temp);
-
-            res.status(200).json(first_element_of_cache);
+            temporary_array_to_match_old_endpoint.push(first_element_of_cache)
+            // res.status(200).json(first_element_of_cache);
+            res.status(200).json(temporary_array_to_match_old_endpoint);
         }
         else if (cache.get("image2").length == 1){
-            res.status(200).json(cache.take("image2")); // take gets the cache and then deletes it
+            // res.status(200).json(cache.take("image2")[0]); // take gets the cache and then deletes it. this one returns it in an array so need to grab first element 
+            res.status(200).json(cache.take("image2"));
         }
         else{
             res.status(500); // something is wrong with the cache
@@ -103,7 +111,9 @@ app.post('/getImages2',(req,res) =>{
                 }
 
                 cache.set("image2", temp_list); // TODO: Test to see if type works
-                res.status(200).json(first_result_object);
+                // res.status(200).json(first_result_object);
+                temporary_array_to_match_old_endpoint.push(first_result_object)
+                res.status(200).json(temporary_array_to_match_old_endpoint);
             })
         }).catch((e) => {
             res.status(500)
