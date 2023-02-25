@@ -91,7 +91,7 @@ app.post('/getImages2',(req,res) =>{
         }
     }
     else{
-        getOpenAIResponseSingle(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
+        getOpenAIResponseSingle2(req.body.prompt,"testAutocompleteClient").then((generatedText) => {
             getImages(generatedText,"testAutocompleteClient").then((results) =>{
                 // construct original response object
                 let first_result_object = {
