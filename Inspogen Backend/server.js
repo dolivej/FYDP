@@ -3,20 +3,68 @@ const helmet = require("helmet");
 const express = require('express');
 const bodyParser = require("body-parser");
 const cors = require('cors');
+const NodeCache = require("node-cache");
 const fetch = (...args) =>
 	import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 var app = express();
 
+const cache = new NodeCache({stdTTL: 120, checkperiod: 300, maxKeys: 3});
+
 app.use(bodyParser.json());
 
 app.post('/getImages',(req,res) =>{
-    console.log("in getImages")
-    getImages(req.body.prompt,"testAutocompleteClient").then((results) =>{
-            res.status(200).json(results)
-    }).catch((e) => {
-        res.status(500)
-    })
+/*
+    RETURNS Reponse in form of
+    {
+        "text": "string",
+        "img": "url"
+    }
+*/
+
+    if(cache.has("image")){
+        if(cache.get("image").length > 1){
+            let rest_of_cache = cache.get("image"); // store as separate to not mutate original cache for now
+            first_element_of_cache = rest_of_cache.shift(1); // temp now becomes the rest of the cache with the first element removed
+
+            // overwrite cached value with new subcached element
+            cache.set("image", rest_of_cache);
+            res.status(200).json(first_element_of_cache);
+        }
+        else if(cache.get("image").length == 1){
+            res.status(200).json(cache.take("image")[0]); // take gets the cache and then deletes it. this one returns it in an array so need to grab first element 
+        }
+        else{
+            res.status(500); // something is wrong with the cache
+        }
+    }
+    else{
+        getImages(req.body.prompt,"testAutocompleteClient").then((results) =>{
+            // construct first response object
+            let first_result_object = {
+                "text": results.text,
+                "img": results.img[0].url
+            };
+
+            // // create datapoint for cache
+            temp_list = [];
+            for(i = 1; i < results.img.length; i++){
+                // i = 1 ignore the first one
+                let temp_cache_object = {
+                    "text": results.text,
+                    "img": results.img[i].url
+                };
+                temp_list.push(temp_cache_object);
+            }
+
+            cache.set("image", temp_list);
+            res.status(200).json(first_result_object);
+
+        }).catch((e) => {
+            res.status(500)
+        })
+    }
+
 })
 
 app.post('/checkPlagarism',(req,res) =>{
@@ -317,6 +365,24 @@ async function getOpenAIResponseList(prompt, listTopic, listContext, user) {
 ///////////////////GET IMAGE/////////////////////////
 
 async function getImages(prompt,user){
+/*
+    RETURNS JSON object like
+    {
+        "text": "string",
+        img: [
+            {
+                "url": "url1"
+            },
+            {
+                "url": "url2"
+            },
+            ...,
+            {
+                "url": "urlN"
+            }
+        ]
+    }
+*/
     return new Promise(function (resolve, reject) {
         prompt = prompt.replace(/[\r\n]/gm, '')
       
@@ -367,7 +433,7 @@ async function getImages(prompt,user){
                         "size": "256x256",
                         "prompt": "${prompt}",
                         "user": "${user}",
-                        "n": 1
+                        "n": 4
                         }`
 
                         let fetch_options2 = {
@@ -384,7 +450,7 @@ async function getImages(prompt,user){
                                 resolve([{text: "...Failed to generate, please try again later.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"}])
                             }else{
                                 initialResponse2.json().then((openAIResponse2) => {
-                                  resolve({text: openAIResponse.choices[0].text.trim(), img: openAIResponse2.data[0].url});
+                                  resolve({text: openAIResponse.choices[0].text.trim(), img: openAIResponse2.data});
                                 })
                             }
                         })
