@@ -447,15 +447,44 @@ function analyzeText(INSTANCE_ID, text, promptId){
 
   fetch(BACKEND_URL + "/checkPlagarism", requestOptions).then((res) => {
     res.json().then((resData => {
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-        chrome.tabs.sendMessage(tabs[0].id,{
-          type: 'analyzedText:result',
-          INSTANCE_ID: INSTANCE_ID,
-          result: {plagarismScore: resData.plagarismScore, paraphrasingScore: resData.paraphrasingScore, uniquenessScore: 90},
-          text: text,
-          promptId: promptId
-        });  
-      }); 
+      var myHeaders2 = new Headers();
+      myHeaders2.append("Content-Type", "application/json");
+
+      var raw2 = JSON.stringify({
+        "idToken": "FYDP",
+        "generatedText": text
+      });
+
+      var requestOptions2 = {
+        method: 'POST',
+        headers: myHeaders2,
+        body: raw2,
+        redirect: 'follow'
+      };
+
+      fetch(BACKEND_URL + "/uniqueVoice", requestOptions2).then((res2) => {
+        res2.json().then((resData2 => {
+          chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+            chrome.tabs.sendMessage(tabs[0].id,{
+              type: 'analyzedText:result',
+              INSTANCE_ID: INSTANCE_ID,
+              result: {plagarismScore: resData.plagarismScore, paraphrasingScore: resData.paraphrasingScore, uniquenessScore: Math.round(resData2.score * 100)},
+              text: text,
+              promptId: promptId
+            });  
+          }); 
+        }))
+      }).catch(e2 => {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+          chrome.tabs.sendMessage(tabs[0].id,{
+            type: 'analyzedText:result',
+            INSTANCE_ID: INSTANCE_ID,
+            result: {plagarismScore: 0, paraphrasingScore: 0, uniquenessScore: 100},
+            text: text,
+            promptId: promptId
+          });  
+        }); 
+      })
     }))
   }).catch(e => {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
