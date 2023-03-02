@@ -122,10 +122,10 @@ function initializeSettingsFunction(INSTANCE_ID){
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.INSTANCE_ID == INSTANCE_ID && request.type == "idlecheck"){
           chrome.storage.local.get(['isDisabled'], function(result) {
-            if(result.isDisabled == false){
+            if(request.isIdle == true && (result.isDisabled == false || result.isDisabled == undefined)){
               Popup.show("popup-1")
             }
-            prevWordCount = request.prevWordCount
+            prevWordCount = request.newCount
           });
         }
     })

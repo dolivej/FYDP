@@ -75,7 +75,7 @@ Google Docs reading words
 FUNCTIONS | LISTENERS | VARIABLES
 */
 async function docsIdleCheck(INSTANCE_ID, prevWordCount, differenceAmount) {
-  console.log(ACCESS_TOKEN)
+  // console.log("IDLE CHECK STARTED")
   if(ACCESS_TOKEN == undefined || ACCESS_TOKEN.length < 5){
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
       chrome.tabs.sendMessage(tabs[0].id,{
@@ -132,7 +132,6 @@ async function docsIdleCheck(INSTANCE_ID, prevWordCount, differenceAmount) {
   }
 
   let currentWordsCount = currentWords.length
-  console.log(currentWordsCount)
 
   if(currentWordsCount - prevWordCount < differenceAmount){
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
@@ -140,7 +139,7 @@ async function docsIdleCheck(INSTANCE_ID, prevWordCount, differenceAmount) {
         type: 'idlecheck',
         INSTANCE_ID: INSTANCE_ID,
         isIdle: true,
-        prevWordCount: currentWordsCount
+        newCount: currentWordsCount
       });  
     });
   }else{
@@ -149,7 +148,7 @@ async function docsIdleCheck(INSTANCE_ID, prevWordCount, differenceAmount) {
         type: 'idlecheck',
         INSTANCE_ID: INSTANCE_ID,
         isIdle: false,
-        prevWordCount: currentWordsCount
+        newCount: currentWordsCount
       });  
     });
   }
