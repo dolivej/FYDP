@@ -6,9 +6,9 @@ function sidebarCreate (ui_id, location){
     sidebar.setAttribute("type","sidebar")
     sidebar.setAttribute("ui_id", ui_id)
     sidebar.style.position = "absolute"
-    sidebar.style.bottom = location.y + "px"
+    sidebar.style.top = location.y + "95px"
     sidebar.style.right = location.x + "px"
-    sidebar.style.height = "100%"
+    sidebar.style.height = "calc(100% - 95px)"
     sidebar.style.width = "375px"
     sidebar.style.display = "none"
     sidebar.innerHTML = sidebarStyles.basic

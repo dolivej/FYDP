@@ -11,7 +11,7 @@ setTimeout(() => {
 
 Sidebar.create("sidebar-1", locationHelper.FORMAT.sidebarLocation);
 
-Menu.create("menu-1","sidebar-1");
+Menu.create("menu-1","sidebar-1", locationHelper.FORMAT.sidebarLocation);
 IdeaSettings.create("ideasettings-1","sidebar-1", INSTANCE_TYPE, INSTANCE_ID, ImageToggle.checkGenerationStyleFunction, "imageToggle-1");
 
 Prompt.create("prompt-1","sidebar-1")
