@@ -7,9 +7,8 @@ var promptBasic = `
   <textarea id="promptTextArea" style="margin:20px; margin-bottom:0px; width:84%; border-radius:10px; padding:2px; resize: none; border-width:0px; font-family: Roboto, Arial; font-size:16px; height: auto; outline: none; border-color: #B4B4B4" readonly> </textarea>
   
   <div style="display:flex; padding:20px; padding-top:10px">
-    <div id="copyButton"style="background-color: #9747FF; padding:10px; border-radius: 10px; color: white; font-weight:bold; cursor:pointer; user-select:none;">Copy</div>
-      <div id="editButton"style="background-color: #9747FF; padding:10px; border-radius: 10px; color: white; font-weight:bold; margin-left:10px; cursor:pointer; user-select:none;">Edit</div>
-    
+  <div id="editButton"style="background-color: #9747FF; padding:10px 15px 10px 15px; height: fit-content; border-radius: 10px; color: white; font-weight:bold; cursor:pointer; user-select:none;">Edit</div>
+    <div id="copyButton"style="background-color: #e7e4f7; padding:10px 15px 10px 15px; height: fit-content; border-radius: 10px; color: #9747FF; font-weight:bold; margin-left:10px; cursor:pointer; user-select:none;">Copy</div>    
 
       <div id="plagarismBox" class="tooltip" style="background-color: white; border-radius: 10px; color: #9747FF; margin-left:auto; user-select:none; text-align:center; border: 2px solid; padding:6px; padding-top:1px; padding-bottom: 1px;">
       <span id="plagarismToolTip" class="tooltiptext"></span>
