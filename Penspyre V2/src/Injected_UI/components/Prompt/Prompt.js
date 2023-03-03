@@ -32,8 +32,8 @@ function promptSetValue (ui_id, promptContext){
         const editButton = GetElementInsideContainer(ui_id,"editButton")
         const copyButton = GetElementInsideContainer(ui_id,"copyButton")
         
-        textContainer.style.height = '300px';
-        imageContainer.style.height = '300px';
+        textContainer.style.height = 'auto';
+        imageContainer.style.height = 'auto';
         
         if(promptContext.image !== ""){
             imageFull.setAttribute("src", promptContext.image)

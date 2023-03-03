@@ -55,8 +55,8 @@ function ideaSettingsCreate (ui_id, parent_ui_id, TYPE, INSTANCE_ID, checkGenera
         const promptTextContainer = document.getElementById("promptTextContainer")
 
         if(promptImageContainer.style.height == 0 || promptTextContainer.style.height == 0) {
-            promptTextContainer.style.height = '300px';
-            promptImageContainer.style.height = '300px';
+            promptTextContainer.style.height = 'auto';
+            promptImageContainer.style.height = 'auto';
         }
 
         setTimeout(function(){
