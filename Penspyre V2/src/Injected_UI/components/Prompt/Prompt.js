@@ -26,11 +26,15 @@ function promptSetValue (ui_id, promptContext){
     const prompt = document.querySelector('[ui_id="'+ui_id+'"]')
     if(promptContext.text !== ""){
         const imageContainer = GetElementInsideContainer(ui_id,"promptImageContainer")
+        const textContainer = GetElementInsideContainer(ui_id,"promptTextContainer")
         const imageFull = GetElementInsideContainer(ui_id,"promptImageFull")
         const promptTextArea = GetElementInsideContainer(ui_id,"promptTextArea")
         const editButton = GetElementInsideContainer(ui_id,"editButton")
         const copyButton = GetElementInsideContainer(ui_id,"copyButton")
-
+        
+        textContainer.style.height = '300px';
+        imageContainer.style.height = '300px';
+        
         if(promptContext.image !== ""){
             imageFull.setAttribute("src", promptContext.image)
             imageContainer.style.display = "block"
@@ -57,13 +61,22 @@ var Prompt = {
 //Component Helper Functions
 function initializePrompt(ui_id){
     const promptTextArea = GetElementInsideContainer(ui_id,"promptTextArea")
+    const promptImageContainer = GetElementInsideContainer(ui_id,"promptImageContainer")
+    const promptTextContainer = GetElementInsideContainer(ui_id,"promptTextContainer")
     const editButton = GetElementInsideContainer(ui_id,"editButton")
     const copyButton = GetElementInsideContainer(ui_id,"copyButton")
+    const textCloseButton = GetElementInsideContainer(ui_id,"promptTextClose")
+    const imageCloseButton = GetElementInsideContainer(ui_id,"promptImageClose")
     promptTextArea.addEventListener("input", function (e) {
         promptTextArea.style.height = 0;
         promptTextArea.style.height = (promptTextArea.scrollHeight) + "px";
     });
-    
+    textCloseButton.addEventListener("click", function (e) {
+        promptTextContainer.style.height = 0;
+    });
+    imageCloseButton.addEventListener("click", function (e) {
+        promptImageContainer.style.height = 0;
+    });
     editButton.addEventListener('click',function(e){
         var isEditing = editButton.getAttribute("isEditing")
 
