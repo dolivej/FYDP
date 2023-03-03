@@ -32,8 +32,8 @@ function promptSetValue (ui_id, promptContext){
         const editButton = GetElementInsideContainer(ui_id,"editButton")
         const copyButton = GetElementInsideContainer(ui_id,"copyButton")
         
-        textContainer.style.height = 'auto';
-        imageContainer.style.height = 'auto';
+        textContainer.style.display = 'block';
+        imageContainer.style.display = 'block';
         
         if(promptContext.image !== ""){
             imageFull.setAttribute("src", promptContext.image)
@@ -72,10 +72,10 @@ function initializePrompt(ui_id){
         promptTextArea.style.height = (promptTextArea.scrollHeight) + "px";
     });
     textCloseButton.addEventListener("click", function (e) {
-        promptTextContainer.style.height = 0;
+        promptTextContainer.style.display = 'none';
     });
     imageCloseButton.addEventListener("click", function (e) {
-        promptImageContainer.style.height = 0;
+        promptImageContainer.style.display = 'none';
     });
     editButton.addEventListener('click',function(e){
         var isEditing = editButton.getAttribute("isEditing")

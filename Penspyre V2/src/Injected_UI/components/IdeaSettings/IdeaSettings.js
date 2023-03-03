@@ -54,9 +54,9 @@ function ideaSettingsCreate (ui_id, parent_ui_id, TYPE, INSTANCE_ID, checkGenera
         const promptImageContainer = document.getElementById("promptImageContainer")
         const promptTextContainer = document.getElementById("promptTextContainer")
 
-        if(promptImageContainer.style.height == 0 || promptTextContainer.style.height == 0) {
-            promptTextContainer.style.height = 'auto';
-            promptImageContainer.style.height = 'auto';
+        if(promptImageContainer.style.display == 'none' || promptTextContainer.style.height == 'none') {
+            promptTextContainer.style.display = 'block';
+            promptImageContainer.style.display = 'block';
         }
 
         setTimeout(function(){
