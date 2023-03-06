@@ -1,9 +1,15 @@
 var promptBasic = `
-<div id="promptImageContainer" style="width: 300px; height:300px; background-color:white; box-shadow: 0px 6px 9px -2px rgba(0,0,0,0.21); margin-left:auto; margin-right:auto; font-family: Roboto, Arial; margin-bottom: 10px; border-radius:10px">
-  <img id="promptImageFull" style="width:300px; height: 300px; border-radius: 10px; object-fit: cover" src="https://www.asc-csa.gc.ca/images/blogue/2018/2018-06-29-13-superbes-sites-facebook.jpg"/>
+<div id="promptImageContainer" style="width: 300px; height:300px; background-color:white; box-shadow: 0px 6px 9px -2px rgba(0,0,0,0.21); margin-left:auto; margin-right:auto; font-family: Roboto, Arial; margin-bottom: 10px; border-radius:10px;">
+<span id="promptImageClose" style="float:right; text-shadow:
+-1px -1px 5px #FFFFFF,  
+ 1px -1px 5px #FFFFFF,
+ -1px 1px 5px #FFFFFF,
+  1px 1px 5px #FFFFFF; font-size:30px; height: 0px; position: relative; z-index: 999;" aria-hidden="true">&times;</span>
+<img id="promptImageFull" style="position: relative; z-index: 0; width:300px; height: 300px; border-radius: 10px; object-fit: cover" src="https://www.asc-csa.gc.ca/images/blogue/2018/2018-06-29-13-superbes-sites-facebook.jpg"/>
 </div>
 
-<div style="width: 300px; background-color:white; box-shadow: 0px 6px 9px -2px rgba(0,0,0,0.21); margin-left:auto; margin-right:auto; font-family: Roboto, Arial; margin-bottom: 10px; border-radius:10px">
+<div id="promptTextContainer" style="width: 300px; background-color:white; box-shadow: 0px 6px 9px -2px rgba(0,0,0,0.21); margin-left:auto; margin-right:auto; font-family: Roboto, Arial; margin-bottom: 10px; border-radius:10px">
+  <span id="promptTextClose" style="float:right; font-size:30px; height: 0px;" aria-hidden="true">&times;</span>
   <textarea id="promptTextArea" style="margin:20px; margin-bottom:0px; width:84%; border-radius:10px; padding:2px; resize: none; border-width:0px; font-family: Roboto, Arial; font-size:16px; height: auto; outline: none; border-color: #B4B4B4" readonly> </textarea>
   
   <div style="display:flex; padding:20px; padding-top:10px">

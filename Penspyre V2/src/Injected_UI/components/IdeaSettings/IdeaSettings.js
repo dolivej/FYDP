@@ -51,6 +51,18 @@ function ideaSettingsCreate (ui_id, parent_ui_id, TYPE, INSTANCE_ID, checkGenera
         var button = document.getElementById("generatePromptButton");
         button.style.boxShadow = "0px 0px 4px 2px rgba(0,0,0,0.32)";
 
+        const promptImageContainer = document.getElementById("promptImageContainer")
+        const promptTextContainer = document.getElementById("promptTextContainer")
+
+        if(promptImageContainer.style.display == 'none' || promptTextContainer.style.height == 'none') {
+            promptTextContainer.style.display = 'block';
+            promptImageContainer.style.display = 'block';
+        }
+
+        setTimeout(function(){
+            console.log("Executed after 1 second");
+        }, 3000);
+        
         if(document.querySelector('input[name="promptType"]:checked') == null){
             alert("Please select Prompt Type")
         }else{
