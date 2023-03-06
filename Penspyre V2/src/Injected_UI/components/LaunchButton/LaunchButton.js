@@ -36,6 +36,7 @@ function launchButtonSetOnClick (ui_id, TYPE, INSTANCE_ID, sidebar_ui_id){
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.INSTANCE_ID == INSTANCE_ID && request.type == "docs:authenticate:success"){
             Sidebar.show(sidebar_ui_id)
+            Menu.show("menu-1")
             launchButtonOnMouseLeave(launchButton)
         }
     })

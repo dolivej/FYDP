@@ -62,6 +62,7 @@ function initializePopup(ui_id, INSTANCE_ID){
     openPromptButton.style.boxShadow = "0px 6px 9px -2px rgba(0,0,0,0)"
         hidePopup(ui_id)
         Sidebar.show("sidebar-1")
+        Menu.show("menu-1")
     });
 
 
