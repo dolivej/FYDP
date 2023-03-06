@@ -54,9 +54,21 @@ function ideaSettingsCreate (ui_id, parent_ui_id, TYPE, INSTANCE_ID, checkGenera
         if(document.querySelector('input[name="promptType"]:checked') == null){
             alert("Please select Prompt Type")
         }else{
+            const ideaSettings = document.getElementById("ideas-contents")
+            ideaSettings.style.display = "none"
+            const collapsedbox = document.getElementById("collapsed-box")
+            collapsedbox.style.display = "block"
+
             var selectedValue = document.querySelector('input[name="promptType"]:checked').value
             generate(selectedValue, TYPE, INSTANCE_ID, checkGenerationStyleFunction, parent_ui_id, image_toggle_ui_id)
         }
+    }
+
+    document.getElementById("collapsed-box").onclick = function(e){
+        const ideaSettings = document.getElementById("ideas-contents")
+        ideaSettings.style.display = "block"
+        const collapsedbox = document.getElementById("collapsed-box")
+        collapsedbox.style.display = "none"
     }
 }
 
@@ -235,6 +247,10 @@ function ideaSettingsSetOnClick (generateData, TYPE, INSTANCE_ID, checkGeneratio
             chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 if (request.INSTANCE_ID == INSTANCE_ID && request.type == "generated:result"){
                     LoadingScreen.hide("loadingScreen-1")
+                    const ideaSettings = document.getElementById("ideas-contents")
+                    ideaSettings.style.display = "none"
+                    const collapsedbox = document.getElementById("collapsed-box")
+                    collapsedbox.style.display = "block"
                     Prompt.setValue("prompt-1",{text: request.prompts[0].text, image: request.prompts[0].image})
                     Prompt.setValue("prompt-2",{text: request.prompts[1].text, image: request.prompts[1].image})
                     Prompt.setValue("prompt-3",{text: request.prompts[2].text, image: request.prompts[2].image})
@@ -256,6 +272,10 @@ function ideaSettingsSetOnClick (generateData, TYPE, INSTANCE_ID, checkGeneratio
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (request.INSTANCE_ID == INSTANCE_ID && request.type == "generated:result"){
                 LoadingScreen.hide("loadingScreen-1")
+                const ideaSettings = document.getElementById("ideas-contents")
+                ideaSettings.style.display = "none"
+                const collapsedbox = document.getElementById("collapsed-box")
+                collapsedbox.style.display = "block"
                 Prompt.setValue("prompt-1",{text: request.prompts[0].text, image: request.prompts[0].image})
                 Prompt.setValue("prompt-2",{text: request.prompts[1].text, image: request.prompts[1].image})
                 Prompt.setValue("prompt-3",{text: request.prompts[2].text, image: request.prompts[2].image})
