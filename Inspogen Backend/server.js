@@ -10,6 +10,7 @@ const fetch = (...args) =>
 var app = express();
 
 const cache = new NodeCache({stdTTL: 120, checkperiod: 300, maxKeys: 3});
+// cache.data = {cache.key1: {}, cache.key2: {}, ... }
 
 app.use(bodyParser.json());
 
@@ -21,51 +22,88 @@ app.post('/getImages',(req,res) =>{
         "img": "url"
     }
 */
+    // Parse metadata = {}
+    // let metadata = req.body.metadata;
 
-    if(cache.has("image")){
-        if(cache.get("image").length > 1){
-            let rest_of_cache = cache.get("image"); // store as separate to not mutate original cache for now
-            first_element_of_cache = rest_of_cache.shift(1); // temp now becomes the rest of the cache with the first element removed
-
-            // overwrite cached value with new subcached element
-            cache.set("image", rest_of_cache);
-            res.status(200).json(first_element_of_cache);
+    if(cache.has("image") && (cache.get("metadata").promptType == req.body.metadata.promptType) ){ // image: [ {object}, {object}, ...]
+        if(req.body.metadata.promptType == "continue" 
+            && (cache.get("metadata").continueFocus == req.body.metadata.continueFocus) 
+            && (cache.get("metadata").continueTone == req.body.metadata.continueTone)){
+                sendResponseFromCache(res);
         }
-        else if(cache.get("image").length == 1){
-            res.status(200).json(cache.take("image")[0]); // take gets the cache and then deletes it. this one returns it in an array so need to grab first element 
+        else if (req.body.metadata.promptType == "link" 
+            && (cache.get("metadata").linkText == req.body.metadata.linkText) ){
+                sendResponseFromCache(res);
+        }
+        else if (req.body.metadata.promptType == "describe" 
+            && (cache.get("metadata").describeTopic== req.body.metadata.describeTopic) 
+            && (cache.get("metadata").describeStyle == req.body.metadata.describeStyle)){
+                sendResponseFromCache(res);
+        }
+        else if (req.body.metadata.promptType == "list" 
+            && (cache.get("metadata").listTopic== req.body.metadata.listTopic) 
+            && (cache.get("metadata").listContext == req.body.metadata.listContext)){
+                sendResponseFromCache(res);
         }
         else{
-            res.status(500); // something is wrong with the cache
+            generateAndCacheImages(req.body.prompt, "testAutocompleteClient", req.body.metadata, res);
         }
+
     }
     else{
-        getImages(req.body.prompt,"testAutocompleteClient").then((results) =>{
-            // construct first response object
-            let first_result_object = {
-                "text": results.text,
-                "img": results.img[0].url
-            };
-
-            // // create datapoint for cache
-            temp_list = [];
-            for(i = 1; i < results.img.length; i++){
-                // i = 1 ignore the first one
-                let temp_cache_object = {
-                    "text": results.text,
-                    "img": results.img[i].url
-                };
-                temp_list.push(temp_cache_object);
-            }
-
-            cache.set("image", temp_list);
-            res.status(200).json(first_result_object);
-
-        }).catch((e) => {
-            res.status(500)
-        })
+        generateAndCacheImages(req.body.prompt, "testAutocompleteClient", req.body.metadata, res);
     }
 
 })
+
+async function generateAndCacheImages(prompt, user, metadata, res){
+    getImages(prompt, user).then((results) =>{
+        // console.log(req.body.prompt);
+        // construct first response object
+        let first_result_object = {
+            "text": results.text,
+            "img": results.img[0].url
+        };
+
+        // // create datapoint for cache
+        temp_list = [];
+        for(i = 1; i < results.img.length; i++){
+            // i = 1 ignore the first one
+            let temp_cache_object = {
+                "text": results.text,
+                "img": results.img[i].url
+            };
+            temp_list.push(temp_cache_object);
+        }
+
+        cache.set("image", temp_list);
+
+        // then store cache metadata to determine image generation
+        cache.set("metadata", metadata);
+
+        res.status(200).json(first_result_object);
+
+    }).catch((e) => {
+        res.status(500)
+    })
+}
+
+async function sendResponseFromCache(res){
+    if(cache.get("image").length > 1){
+        let rest_of_cache = cache.get("image"); // store as separate to not mutate original cache for now
+        first_element_of_cache = rest_of_cache.shift(1); // temp now becomes the rest of the cache with the first element removed
+
+        // overwrite cached value with new subcached element
+        cache.set("image", rest_of_cache);
+        res.status(200).json(first_element_of_cache);
+    }
+    else if(cache.get("image").length == 1){
+        res.status(200).json(cache.take("image")[0]); // take gets the cache and then deletes it. this one returns it in an array so need to grab first element 
+    }
+    else{
+        res.status(500); // something is wrong with the cache
+    }
+}
 
 app.post('/checkPlagarism',(req,res) =>{
     checkPlagarism(req.body.text).then((result)=>{
@@ -79,7 +117,13 @@ app.post('/continuePrompt',(req,res) =>{
     console.log("in continuePrompt")
     // Parameters `req.body` are: `prompt`, `continueFocus`, `continueTone`
     getOpenAIResponseContinue(req.body.prompt,req.body.continueFocus,req.body.continueTone,"testAutocompleteClient").then((generatedText) => {
-        res.status(200).json({text: generatedText})
+        let metadata_object = {
+            "promptType": "continue",
+            "continueFocus": req.body.continueFocus,
+            "continueTone": req.body.continueTone
+        };
+        
+        res.status(200).json({text: generatedText, metadata: metadata_object})
     }).catch((e) => {
         res.status(500)
     })
@@ -160,7 +204,12 @@ app.post('/linkPrompt',(req,res) =>{
     console.log("in linkPrompt")
     // Parameters `req.body` are: `prompt`, `linkText`
     getOpenAIResponseLink(req.body.prompt,req.body.linkText,"testAutocompleteClient").then((generatedText) => {
-        res.status(200).json({text: generatedText})
+        let metadata_object = {
+            "promptType": "link",
+            "linkText": req.body.linkText,
+        };
+
+        res.status(200).json({text: generatedText, metadata: metadata_object})
     }).catch((e) => {
         res.status(500)
     })
@@ -225,7 +274,13 @@ app.post('/describePrompt',(req,res) =>{
     console.log("in describePrompt")
     // Parameters `req.body` are: `prompt`, `describeTopic`, `describeStyle`
     getOpenAIResponseDescribe(req.body.prompt,req.body.describeTopic,req.body.describeStyle,"testAutocompleteClient").then((generatedText) => {
-        res.status(200).json({text: generatedText})
+        let metadata_object = {
+            "promptType": "describe",
+            "describeTopic": req.body.describeTopic,
+            "describeStyle": req.body.describeStyle
+        };
+
+        res.status(200).json({text: generatedText, metadata: metadata_object})
     }).catch((e) => {
         res.status(500)
     })
@@ -300,6 +355,12 @@ app.post('/listPrompt',(req,res) =>{
     console.log("in listPrompt")
     // Parameters `req.body` are: `prompt`, `listTopic`, `listContext`
     getOpenAIResponseList(req.body.prompt,req.body.listTopic,req.body.listContext,"testAutocompleteClient").then((generatedText) => {
+        let metadata_object = {
+            "promptType": "list",
+            "listTopic": req.body.listTopic,
+            "listContext": req.body.listContext
+        };
+
         res.status(200).json({text: generatedText})
     }).catch((e) => {
         res.status(500)

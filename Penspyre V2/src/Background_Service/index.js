@@ -370,7 +370,7 @@ async function generateDataTextAndImages(INSTANCE_ID, generateData) {
 
   fetch(BACKEND_URL + promptTypeUrl, requestOptions).then((res) => {
     res.json().then((resData => {
-      getImage(INSTANCE_ID,resData.text)
+      getImage(INSTANCE_ID,resData.text,resData.metadata)
     }))
   }).catch(e => {
     console.log(e)
@@ -384,13 +384,14 @@ async function generateDataTextAndImages(INSTANCE_ID, generateData) {
   })
 }
 
-async function getImage(INSTANCE_ID, prompt) {
+async function getImage(INSTANCE_ID, prompt, metadata) {
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
 
   var raw = JSON.stringify({
     "idToken": "FYDP",
-    "prompt": prompt
+    "prompt": prompt,
+    "metadata" : metadata
   });
 
   var requestOptions = {
