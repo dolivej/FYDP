@@ -368,9 +368,20 @@ async function generateDataTextAndImages(INSTANCE_ID, generateData) {
     promptTypeUrl = "/listPrompt"
   }
 
+  let metadataTemp = {
+    "promptType": generateData.promptType,
+    "continueFocus": generateData.continueFocus,
+    "continueTone": generateData.continueTone,
+    "linkText": generateData.linkText,
+    "describeTopic": generateData.describeTopic,
+    "describeStyle": generateData.describeStyle,
+    "listTopic": generateData.listTopic,
+    "listContext": generateData.listContext
+  }
+
   fetch(BACKEND_URL + promptTypeUrl, requestOptions).then((res) => {
     res.json().then((resData => {
-      getImage(INSTANCE_ID,resData.text,resData.metadata)
+      getImage(INSTANCE_ID,resData.text,metadataTemp)
     }))
   }).catch(e => {
     console.log(e)

@@ -22,8 +22,6 @@ app.post('/getImages',(req,res) =>{
         "img": "url"
     }
 */
-    // Parse metadata = {}
-    // let metadata = req.body.metadata;
 
     if(cache.has("image") && (cache.get("metadata").promptType == req.body.metadata.promptType) ){ // image: [ {object}, {object}, ...]
         if(req.body.metadata.promptType == "continue" 
@@ -117,13 +115,7 @@ app.post('/continuePrompt',(req,res) =>{
     console.log("in continuePrompt")
     // Parameters `req.body` are: `prompt`, `continueFocus`, `continueTone`
     getOpenAIResponseContinue(req.body.prompt,req.body.continueFocus,req.body.continueTone,"testAutocompleteClient").then((generatedText) => {
-        let metadata_object = {
-            "promptType": "continue",
-            "continueFocus": req.body.continueFocus,
-            "continueTone": req.body.continueTone
-        };
-        
-        res.status(200).json({text: generatedText, metadata: metadata_object})
+        res.status(200).json({text: generatedText})
     }).catch((e) => {
         res.status(500)
     })
@@ -204,12 +196,7 @@ app.post('/linkPrompt',(req,res) =>{
     console.log("in linkPrompt")
     // Parameters `req.body` are: `prompt`, `linkText`
     getOpenAIResponseLink(req.body.prompt,req.body.linkText,"testAutocompleteClient").then((generatedText) => {
-        let metadata_object = {
-            "promptType": "link",
-            "linkText": req.body.linkText,
-        };
-
-        res.status(200).json({text: generatedText, metadata: metadata_object})
+        res.status(200).json({text: generatedText})
     }).catch((e) => {
         res.status(500)
     })
@@ -274,13 +261,7 @@ app.post('/describePrompt',(req,res) =>{
     console.log("in describePrompt")
     // Parameters `req.body` are: `prompt`, `describeTopic`, `describeStyle`
     getOpenAIResponseDescribe(req.body.prompt,req.body.describeTopic,req.body.describeStyle,"testAutocompleteClient").then((generatedText) => {
-        let metadata_object = {
-            "promptType": "describe",
-            "describeTopic": req.body.describeTopic,
-            "describeStyle": req.body.describeStyle
-        };
-
-        res.status(200).json({text: generatedText, metadata: metadata_object})
+        res.status(200).json({text: generatedText})
     }).catch((e) => {
         res.status(500)
     })
@@ -355,12 +336,6 @@ app.post('/listPrompt',(req,res) =>{
     console.log("in listPrompt")
     // Parameters `req.body` are: `prompt`, `listTopic`, `listContext`
     getOpenAIResponseList(req.body.prompt,req.body.listTopic,req.body.listContext,"testAutocompleteClient").then((generatedText) => {
-        let metadata_object = {
-            "promptType": "list",
-            "listTopic": req.body.listTopic,
-            "listContext": req.body.listContext
-        };
-
         res.status(200).json({text: generatedText})
     }).catch((e) => {
         res.status(500)
