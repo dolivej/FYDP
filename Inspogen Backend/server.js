@@ -468,6 +468,7 @@ async function getImages(prompt,user){
 
 app.post('/uniqueVoice', (req, res) => {
 /*
+    The following is a temporary implementation of GPTZero. This should be redone to use the full capabilties of GPTZero
     RETURNS JSON object 
     {
         "label": "Real",
@@ -478,17 +479,15 @@ app.post('/uniqueVoice', (req, res) => {
     Fake = 1 - (real score)
 */
     getOpenAIDetectorScore(req.body.generatedText).then((score) => {
-        if(score.length == 1 || score[0].label == "Error"){
-            res.status(500); // This technically does the same thing as the else statement but leaving this in here in case things need to be changed
+        if("error" in score){
+            res.status(500); 
         }
-        else if (score.length == 2){
-            // the response from the API will have the higher Real/Fake value first
-            if(score[0].label == "Real"){
-                res.status(200).json(score[0]);
-            }
-            else{
-                res.status(200).json(score[1])
-            }
+        else if ("completely_generated_prob" in score){
+            let temp_score = {
+                "label": "Real",
+                "score": (1 - score.completely_generated_prob)
+            };
+            res.status(200).json(temp_score);
         }
         else{
             res.status(500);
@@ -499,35 +498,34 @@ app.post('/uniqueVoice', (req, res) => {
 });
 
 async function getOpenAIDetectorScore(generatedText){
-/*
+/*  
+    The following is a temporary implementation of GPTZero. This should be redone to use the full capabilties of GPTZero
     Associated with: /uniqueVoice
-    Generates a score between 0 and 1 for how "real / human" a generated prompt sounds 
+    Generates a score between 0 and 1 for how "fake / AI" a generated prompt sounds 
     Required params: 
     {
         "generatedText": string
     }
-    Requires .env HUGGINGFACE_KEY
+    Requires .env GPTZERO_KEY
     RETURNS JSON object like
-    [
-        {
-            "label": "Real, Fake, or Error",
-            "score": float between 0 and 1
-        },
-        {same as above}
-    ]
+    {
+        ...
+    }
 */
     return new Promise (function (resolve, reject) {
-        let fetch_url = `https://api-inference.huggingface.co/models/roberta-base-openai-detector`;
+        let fetch_url = `https://api.gptzero.me/v2/predict/text`;
         generatedText = generatedText.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
 
         let data = `{
-            "inputs": "${generatedText}"
+            "document": "${generatedText}"
         }`;
 
         let fetch_options = {
             method: "POST",
             headers: {
                 Authorization: "Bearer " + process.env.HUGGINGFACE_KEY,
+                "accept": "application/json",
+                "X-Api-Key": process.env.GPTZERO_KEY,
                 "Content-Type": "application/json"
             },
             body: data
@@ -535,11 +533,11 @@ async function getOpenAIDetectorScore(generatedText){
 
         fetch(fetch_url, fetch_options).then((initialResponse) => {
             if(initialResponse.status >= 400){
-                resolve([{label: "Error", score: 0}]);
+                resolve({"error": "error"});
             }
             else{
                 initialResponse.json().then((data) => {
-                    resolve(data[0]);
+                    resolve(data.documents[0]);
                 });
             }
         });
