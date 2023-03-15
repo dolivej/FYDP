@@ -133,7 +133,7 @@ function initializePrompt(ui_id){
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.INSTANCE_ID == INSTANCE_ID && request.type == "analyzedText:result"){
 
-            if((Math.max(request.result.plagarismScore,request.result.paraphrasingScore) + (100-request.result.uniquenessScore))/2 < 50){
+            if(Math.max(request.result.plagarismScore,request.result.paraphrasingScore) < 33 && (100 - request.result.uniquenessScore) > 66){
                 plagarismToolTip.innerHTML = "No issues detected. Click for details."
                 plagarismMessage.innerHTML = "No Issues!"
         
@@ -143,7 +143,7 @@ function initializePrompt(ui_id){
                 plagarismIcon.style.fill = "#79D977"
         
                 plagarismIcon.setAttribute("d","M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z")
-            }else if((Math.max(request.result.plagarismScore,request.result.paraphrasingScore) + (100-request.result.uniquenessScore))/2 < 80){
+            }else if(Math.max(request.result.plagarismScore,request.result.paraphrasingScore) < 66 && (100 - request.result.uniquenessScore) > 33){
                 plagarismToolTip.innerHTML = "This prompt can be improved. Click for details."
                 plagarismMessage.innerHTML = "Weak!"
 
@@ -174,11 +174,11 @@ function initializePrompt(ui_id){
                 }
             }
 
-            plagarismAction.innerHTML = Math.max(request.result.plagarismScore,request.result.paraphrasingScore) > 50 ? "Edits Required" : "No Issues."
+            plagarismAction.innerHTML = Math.max(request.result.plagarismScore,request.result.paraphrasingScore) > 50 ? "Edits Suggested" : "No Issues."
             plagarismPercent.innerHTML = "" + request.result.plagarismScore + "%"
             paraphrasingPercent.innerHTML = "" + request.result.paraphrasingScore + "%"
-            uniquenessAction.innerHTML = (100-request.result.uniquenessScore) > 25 ? "Edits Required" : "No Issues."
-            uniqnessScore.innerHTML = "" + request.result.uniquenessScore + "/100"
+            uniquenessAction.innerHTML = (100 - request.result.uniquenessScore) > 25 ? "Edits Suggested" : "No Issues."
+            uniqnessScore.innerHTML = "" + (100 - request.result.uniquenessScore) + "/100"
         }
     })
 }
