@@ -71,6 +71,12 @@ function initializePrompt(ui_id){
         promptTextArea.style.height = 0;
         promptTextArea.style.height = (promptTextArea.scrollHeight) + "px";
     });
+    promptTextArea.addEventListener("click", function (e) {
+        editButton.innerHTML = "Finish"
+        editButton.setAttribute("isEditing","True")
+        promptTextArea.removeAttribute("readonly")
+        promptTextArea.style.borderWidth= "2px"
+    });
     textCloseButton.addEventListener("click", function (e) {
         promptTextContainer.style.display = 'none';
     });
