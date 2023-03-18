@@ -368,9 +368,20 @@ async function generateDataTextAndImages(INSTANCE_ID, generateData) {
     promptTypeUrl = "/listPrompt"
   }
 
+  let metadataTemp = {
+    "promptType": generateData.promptType,
+    "continueFocus": generateData.continueFocus,
+    "continueTone": generateData.continueTone,
+    "linkText": generateData.linkText,
+    "describeTopic": generateData.describeTopic,
+    "describeStyle": generateData.describeStyle,
+    "listTopic": generateData.listTopic,
+    "listContext": generateData.listContext
+  }
+
   fetch(BACKEND_URL + promptTypeUrl, requestOptions).then((res) => {
     res.json().then((resData => {
-      getImage(INSTANCE_ID,resData.text)
+      getImage(INSTANCE_ID,resData.text,metadataTemp)
     }))
   }).catch(e => {
     console.log(e)
@@ -384,13 +395,14 @@ async function generateDataTextAndImages(INSTANCE_ID, generateData) {
   })
 }
 
-async function getImage(INSTANCE_ID, prompt) {
+async function getImage(INSTANCE_ID, prompt, metadata) {
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
 
   var raw = JSON.stringify({
     "idToken": "FYDP",
-    "prompt": prompt
+    "prompt": prompt,
+    "metadata" : metadata
   });
 
   var requestOptions = {
