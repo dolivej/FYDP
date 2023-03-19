@@ -369,6 +369,7 @@ async function generateDataTextAndImages(INSTANCE_ID, generateData) {
   }
 
   let metadataTemp = {
+    "currentWords": currentWords,
     "promptType": generateData.promptType,
     "continueFocus": generateData.continueFocus,
     "continueTone": generateData.continueTone,
