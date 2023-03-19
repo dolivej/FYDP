@@ -56,6 +56,7 @@ app.post('/getImages',(req,res) =>{
 
 async function generateAndCacheImages(prompt, user, metadata, res){
     getImages(prompt, user).then((results) =>{
+        // expected result is returned, status 200 from the image generation
         if(typeof(results.img) == "object"){
              // construct first response object
             let first_result_object = {
@@ -81,6 +82,7 @@ async function generateAndCacheImages(prompt, user, metadata, res){
 
             res.status(200).json(first_result_object);
         }
+        // if an error is returned, or if unsafe content is retured
         else if(typeof(results.img) == "string"){
             res.status(200).json({text: results.text, img: results.img})
         }
