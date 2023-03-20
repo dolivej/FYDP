@@ -23,7 +23,7 @@ app.post('/getImages',(req,res) =>{
     }
 */
 
-    if(cache.has("image") && (cache.get("metadata").promptType == req.body.metadata.promptType) ){ // image: [ {object}, {object}, ...]
+    if(cache.has("image") && (cache.get("metadata").promptType == req.body.metadata.promptType) && (cache.get("metadata").currentWords == req.body.metadata.currentWords)){ // image: [ {object}, {object}, ...]
         if(req.body.metadata.promptType == "continue" 
             && (cache.get("metadata").continueFocus == req.body.metadata.continueFocus) 
             && (cache.get("metadata").continueTone == req.body.metadata.continueTone)){
@@ -56,30 +56,40 @@ app.post('/getImages',(req,res) =>{
 
 async function generateAndCacheImages(prompt, user, metadata, res){
     getImages(prompt, user).then((results) =>{
-        // console.log(req.body.prompt);
-        // construct first response object
-        let first_result_object = {
-            "text": results.text,
-            "img": results.img[0].url
-        };
-
-        // // create datapoint for cache
-        temp_list = [];
-        for(i = 1; i < results.img.length; i++){
-            // i = 1 ignore the first one
-            let temp_cache_object = {
+        // expected result is returned, status 200 from the image generation
+        if(typeof(results.img) == "object"){
+             // construct first response object
+            let first_result_object = {
                 "text": results.text,
-                "img": results.img[i].url
+                "img": results.img[0].url
             };
-            temp_list.push(temp_cache_object);
+
+            // // create datapoint for cache
+            temp_list = [];
+            for(i = 1; i < results.img.length; i++){
+                // i = 1 ignore the first one
+                let temp_cache_object = {
+                    "text": results.text,
+                    "img": results.img[i].url
+                };
+                temp_list.push(temp_cache_object);
+            }
+
+            cache.set("image", temp_list);
+
+            // then store cache metadata to determine image generation
+            cache.set("metadata", metadata);
+
+            res.status(200).json(first_result_object);
         }
-
-        cache.set("image", temp_list);
-
-        // then store cache metadata to determine image generation
-        cache.set("metadata", metadata);
-
-        res.status(200).json(first_result_object);
+        // if an error is returned, or if unsafe content is retured
+        else if(typeof(results.img) == "string"){
+            res.status(200).json({text: results.text, img: results.img})
+        }
+        else{
+            res.status(500);
+        }
+       
 
     }).catch((e) => {
         res.status(500)
@@ -483,7 +493,7 @@ async function getImages(prompt,user){
 
                         fetch(fetch_url2, fetch_options2).then((initialResponse2) => {
                             if(initialResponse2.status >= 400){
-                                resolve([{text: "...Failed to generate, please try again later.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"}])
+                                resolve({text: "...Failed to generate, please try again later.", img: "https://dictionary.cambridge.org/fr/images/thumb/cross_noun_002_09265.jpg"})
                             }else{
                                 initialResponse2.json().then((openAIResponse2) => {
                                   resolve({text: openAIResponse.choices[0].text.trim(), img: openAIResponse2.data});
